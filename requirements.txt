@@ -1,4 +1,4 @@
-streamlit==1.21.0
-torch==1.12.0+cpu
+streamlit==2.0.0
+torch==2.2.0
 transformers==4.20.0
 streamlit-chat==0.5.2
