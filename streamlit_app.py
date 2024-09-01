@@ -1,22 +1,29 @@
 import streamlit as st
 from streamlit_chat import message
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 # Initialize the chat history dictionary
 chat_history = {}
 
-# Load the pre-trained LLaMA model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained("decapoda-research/llama-7b-hf")
-model = AutoModelForCausalLM.from_pretrained("decapoda-research/llama-7b-hf")
+# Load the pre-trained OPT model and tokenizer
+@st.cache_resource
+def load_model():
+    tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
+    model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m")
+    return tokenizer, model
+
+tokenizer, model = load_model()
 
 def generate_bot_response(user_message):
     inputs = tokenizer(user_message, return_tensors="pt")
-    outputs = model.generate(inputs.input_ids, max_length=50, do_sample=True, temperature=0.7)
+    with torch.no_grad():
+        outputs = model.generate(inputs.input_ids, max_length=50, do_sample=True, temperature=0.7)
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return response
 
 def main():
-    st.title("LLaMA Chatbot")
+    st.title("AI Chatbot")
     st.header("Converse with me!")
 
     # Set up the text input field and button
@@ -35,21 +42,18 @@ def main():
             chat_id = st.session_state["chat_id"]
             chat_history[chat_id] = {"user": user_message, "bot": None}
 
-            # Generate a response from LLaMA
+            # Generate a response from the model
             bot_response = generate_bot_response(user_message)
             chat_history[chat_id]["bot"] = bot_response
-
-            # Update the chat history with the new message
-            message.update(chat_history)
 
             # Increment chat_id for the next conversation
             st.session_state["chat_id"] += 1
 
     # Display the chat history and generated responses
     for i, (chat_id, messages) in enumerate(chat_history.items()):
-        st.write(f"**Chat {i+1}**")
-        st.write(f"> **User**: {messages['user']}")
-        st.write(f"< **Bot**: {messages['bot']}")
+        message(messages['user'], is_user=True, key=f"user_{i}")
+        if messages['bot']:
+            message(messages['bot'], is_user=False, key=f"bot_{i}")
 
 if __name__ == "__main__":
     main()
