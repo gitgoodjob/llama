@@ -1,10 +1,19 @@
 import streamlit as st
 from streamlit_chat import message
-import torch
-import transformers
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Initialize the chat history dictionary
 chat_history = {}
+
+# Load the pre-trained LLaMA model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained("decapoda-research/llama-7b-hf")
+model = AutoModelForCausalLM.from_pretrained("decapoda-research/llama-7b-hf")
+
+def generate_bot_response(user_message):
+    inputs = tokenizer(user_message, return_tensors="pt")
+    outputs = model.generate(inputs.input_ids, max_length=50, do_sample=True, temperature=0.7)
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return response
 
 def main():
     st.title("LLaMA Chatbot")
