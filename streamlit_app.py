@@ -1,5 +1,7 @@
 import streamlit as st
 from streamlit_chat import st_chat
+import torch
+import transformers
 
 # Initialize the chat history dictionary
 chat_history = {}
