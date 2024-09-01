@@ -1,29 +1,52 @@
 import streamlit as st
 from streamlit_chat import message
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.lm.preprocessing import padded_everygram_pipeline
+from nltk.lm import MLE
+import random
+
+# Download necessary NLTK data
+nltk.download('punkt')
 
 # Initialize the chat history dictionary
 chat_history = {}
 
-# Load the pre-trained OPT model and tokenizer
+# Create a simple language model
+def create_language_model(text, n=2):
+    tokens = word_tokenize(text.lower())
+    train_data, padded_sents = padded_everygram_pipeline(n, [tokens])
+    model = MLE(n)
+    model.fit(train_data, padded_sents)
+    return model
+
+# Generate a response using the language model
+def generate_bot_response(model, user_message, max_length=20):
+    context = word_tokenize(user_message.lower())[-model.order+1:]
+    response = []
+    for _ in range(max_length):
+        next_word = model.generate(1, context)
+        if next_word is None:
+            break
+        response.append(next_word)
+        context = context[1:] + [next_word]
+    return ' '.join(response)
+
+# Load the model (this function is cached)
 @st.cache_resource
 def load_model():
-    tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
-    model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m")
-    return tokenizer, model
+    # Sample text for training the model
+    sample_text = """
+    Hello! How are you? I'm an AI assistant. I can help you with various tasks.
+    What would you like to know? I can provide information on many topics.
+    Let me know if you have any questions. I'm here to assist you.
+    """
+    return create_language_model(sample_text)
 
-tokenizer, model = load_model()
-
-def generate_bot_response(user_message):
-    inputs = tokenizer(user_message, return_tensors="pt")
-    with torch.no_grad():
-        outputs = model.generate(inputs.input_ids, max_length=50, do_sample=True, temperature=0.7)
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
+model = load_model()
 
 def main():
-    st.title("AI Chatbot")
+    st.title("Simple AI Chatbot")
     st.header("Converse with me!")
 
     # Set up the text input field and button
@@ -42,8 +65,8 @@ def main():
             chat_id = st.session_state["chat_id"]
             chat_history[chat_id] = {"user": user_message, "bot": None}
 
-            # Generate a response from the model
-            bot_response = generate_bot_response(user_message)
+            # Generate a response
+            bot_response = generate_bot_response(model, user_message)
             chat_history[chat_id]["bot"] = bot_response
 
             # Increment chat_id for the next conversation
