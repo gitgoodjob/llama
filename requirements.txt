@@ -2,3 +2,4 @@ streamlit==1.38.0
 torch==2.2.0
 tokenizers>=0.14.0
 streamlit-chat==0.1.1
+transformers
