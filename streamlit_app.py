@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_chat import st_chat
+from streamlit_chat import message
 import torch
 import transformers
 
@@ -26,10 +26,10 @@ def main():
             chat_history[st.session_state["chat_id"]]["bot"] = bot_response
 
             # Update the chat history with the new message
-            st_chat.update(chat_history)
+            message.update(chat_history)
 
     # Display the chat history and generated responses
-    for i, (chat_id, messages) in enumerate(st_chat.display(chat_history).items()):
+    for i, (chat_id, messages) in enumerate(message.display(chat_history).items()):
         st.write(f"**Chat {i+1}**")
         for user_message, bot_message in messages.items():
             if user_message:
