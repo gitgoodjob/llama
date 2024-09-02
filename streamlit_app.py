@@ -1,10 +1,10 @@
 import streamlit as st
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-# Load a smaller model
-model_name = "t5-small"
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Load a smaller model with caching disabled
+model_name = "t5-base"
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_cache=False)
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_cache=False)
 
 # Initialize the chat history
 chat_history = []
