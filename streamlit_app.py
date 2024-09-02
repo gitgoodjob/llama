@@ -1,103 +1,46 @@
 import streamlit as st
-from streamlit_chat import message
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.lm.preprocessing import padded_everygram_pipeline
-from nltk.lm import MLE
-import random
+from transformers import LLaMAForConditionalGeneration, LLaMATokenizer
 
-print("Starting the app...")
+# Load the LLaMA model and tokenizer
+model = LLaMAForConditionalGeneration.from_pretrained("facebook/llama-7b")
+tokenizer = LLaMATokenizer.from_pretrained("facebook/llama-7b")
 
-# Download necessary NLTK data
-nltk.download('punkt', quiet=True)
+# Initialize the chat history
+chat_history = []
 
-print("NLTK data downloaded.")
+def chatbot_response(input_text):
+    # Preprocess the input text
+    inputs = tokenizer(input_text, return_tensors="pt")
 
-# Initialize the chat history dictionary
-chat_history = {}
+    # Generate a response
+    outputs = model.generate(**inputs, max_length=512)
 
-# Create a simple language model
-def create_language_model(text, n=2):
-    print("Creating language model...")
-    tokens = word_tokenize(text.lower())
-    train_data, padded_sents = padded_everygram_pipeline(n, [tokens])
-    model = MLE(n)
-    model.fit(train_data, padded_sents)
-    print("Language model created.")
-    return model
+    # Convert the response to text
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# Generate a response using the language model
-def generate_bot_response(model, user_message, max_length=20):
-    print(f"Generating response for: {user_message}")
-    context = word_tokenize(user_message.lower())[-model.order+1:]
-    response = []
-    for _ in range(max_length):
-        next_word = model.generate(1, context)
-        if next_word is None:
-            break
-        response.append(next_word)
-        context = context[1:] + [next_word]
-    response_text = ' '.join(response)
-    print(f"Generated response: {response_text}")
-    return response_text
+    return response
 
-# Load the model (this function is cached)
-@st.cache_resource
-def load_model():
-    print("Loading model...")
-    # Sample text for training the model
-    sample_text = """
-    Hello! How are you? I'm an AI assistant. I can help you with various tasks.
-    What would you like to know? I can provide information on many topics.
-    Let me know if you have any questions. I'm here to assist you.
-    """
-    model = create_language_model(sample_text)
-    print("Model loaded.")
-    return model
+def app():
+    st.title("LLaMA Chatbot")
 
-print("About to load model...")
-model = load_model()
-print("Model loaded successfully.")
+    # Chat input field
+    user_input = st.text_input("Type a message:", "")
 
-def main():
-    print("Entering main function...")
-    st.title("Simple AI Chatbot")
-    st.header("Converse with me!")
+    # Send button
+    if st.button("Send"):
+        # Add the user input to the chat history
+        chat_history.append(f"User: {user_input}")
 
-    # Set up the text input field and button
-    user_input = st.text_input("Type a message...")
-    send_button = st.button("Send")
+        # Get the chatbot response
+        response = chatbot_response(user_input)
 
-    # Initialize chat_id if not set
-    if "chat_id" not in st.session_state:
-        st.session_state["chat_id"] = 0
+        # Add the chatbot response to the chat history
+        chat_history.append(f"LLaMA: {response}")
 
-    # Handle the chat interaction
-    if send_button:
-        print("Send button clicked.")
-        user_message = user_input.strip()
-        if user_message:
-            print(f"Processing user message: {user_message}")
-            # Add the user's message to the chat history
-            chat_id = st.session_state["chat_id"]
-            chat_history[chat_id] = {"user": user_message, "bot": None}
-
-            # Generate a response
-            bot_response = generate_bot_response(model, user_message)
-            chat_history[chat_id]["bot"] = bot_response
-
-            # Increment chat_id for the next conversation
-            st.session_state["chat_id"] += 1
-
-    # Display the chat history and generated responses
-    print("Displaying chat history...")
-    for i, (chat_id, messages) in enumerate(chat_history.items()):
-        message(messages['user'], is_user=True, key=f"user_{i}")
-        if messages['bot']:
-            message(messages['bot'], is_user=False, key=f"bot_{i}")
-
-    print("Main function completed.")
+    # Display the chat history
+    st.write("Chat History:")
+    for message in chat_history:
+        st.write(message)
 
 if __name__ == "__main__":
-    main()
-    
+    app()
