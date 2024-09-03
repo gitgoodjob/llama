@@ -1,11 +1,11 @@
 import streamlit as st
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import T5ForConditionalGeneration, AutoTokenizer
 
 # Load a smaller model with caching disabled
 model_name = "t5-small"
 try:
     model = T5ForConditionalGeneration.from_pretrained(model_name)
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
 except ImportError as e:
     st.error(f"Error loading model: {e}")
     st.write("Please install the required backend libraries (torch, torchvision, numpy, scipy, Pillow)")
