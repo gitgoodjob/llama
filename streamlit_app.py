@@ -2,7 +2,9 @@ import streamlit as st
 from transformers import T5ForConditionalGeneration, AutoTokenizer
 
 # Load a smaller model with caching disabled
-model_name = "t5-small"
+#model = T5ForConditionalGeneration.from_pretrained("google-t5/t5-small")
+
+model_name = "google-t5/t5-small"
 try:
     model = T5ForConditionalGeneration.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
