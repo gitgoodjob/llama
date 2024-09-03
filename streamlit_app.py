@@ -6,8 +6,8 @@ from transformers import T5ForConditionalGeneration, AutoTokenizer
 
 model_name = "google-t5/t5-small"
 try:
-    model = T5ForConditionalGeneration.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = T5ForConditionalGeneration.from_pretrained(model_name)
 except ImportError as e:
     st.error(f"Error loading model: {e}")
     st.write("Please install the required backend libraries (torch, torchvision, numpy, scipy, Pillow)")
