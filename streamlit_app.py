@@ -4,7 +4,7 @@ from transformers import T5ForConditionalGeneration, AutoTokenizer
 # Load a smaller model with caching disabled
 #model = T5ForConditionalGeneration.from_pretrained("google-t5/t5-small")
 
-model_name = "google-t5/t5-small"
+model_name = "t5-small"
 try:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = T5ForConditionalGeneration.from_pretrained(model_name)
